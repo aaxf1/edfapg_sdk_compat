@@ -1,28 +1,30 @@
-
 import 'dart:convert';
-
 import 'package:edfapg_sdk/edfapg_sdk.dart';
 import 'package:edfapg_sdk/src/Helpers.dart';
 import 'package:edfapg_sdk/src/adapters/BaseAdapter.dart';
 import 'package:edfapg_sdk/src/applepay/EdfaApplePayResult.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgPayer.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgSaleOrder.dart';
-
+import 'package:edfapg_sdk/src/request/EdfaPgConfig.dart';
+import 'package:edfapg_sdk/src/request/EdfaPgRecurringOptions.dart';
 import 'callbacks/ApplePayResponseCallback.dart';
 
-class EdfaApplePayAdapter extends BaseAdapter{
+class EdfaApplePayAdapter extends BaseAdapter {
 
   execute({
-    required String applePayMerchantId,
     required EdfaPgSaleOrder order,
     required EdfaPgPayer payer,
+    required EdfaPgConfig config,
     required ApplePayResponseCallback? callback,
+    EdfaPgRecurringOptions? recurring,
     Function(dynamic)? onFailure,
   }) {
     final params = {
-      order.runtimeType.toString(): order.toJson(),
-      payer.runtimeType.toString(): payer.toJson(),
-      "applePayMerchantId": applePayMerchantId,
+      "order": order.toJson(),
+      "payer": payer.toJson(),
+      "config": config.toJson(),
+      "applePayMerchantId": config.merchantKey, // optional logic
+      if (recurring != null) "recurring": recurring.toJson(),
     };
 
     startApplePay(params).listen((event) {
@@ -30,6 +32,6 @@ class EdfaApplePayAdapter extends BaseAdapter{
       EdfaApplePayResult(event).triggerCallbacks(callback);
     });
 
-    Log("[ EdfaPgSaleAdapter.execute][Params] ${jsonEncode(params)}");
+    Log("[EdfaApplePayAdapter.execute][Params] ${jsonEncode(params)}");
   }
 }
