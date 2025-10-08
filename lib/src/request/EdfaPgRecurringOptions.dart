@@ -1,13 +1,12 @@
 import 'dart:convert';
 
 class EdfaPgRecurringOptions {
-
   String? firstTransactionId;
   String? token;
 
   EdfaPgRecurringOptions({
-    required this.firstTransactionId,
-    required this.token
+    this.firstTransactionId,
+    this.token,
   });
 
   EdfaPgRecurringOptions.fromJson(dynamic json) {
@@ -17,8 +16,8 @@ class EdfaPgRecurringOptions {
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
-    map['firstTransactionId'] = firstTransactionId;
-    map['token'] = token;
+    if (firstTransactionId != null) map['firstTransactionId'] = firstTransactionId;
+    if (token != null) map['token'] = token;
     return map;
   }
 
@@ -26,5 +25,4 @@ class EdfaPgRecurringOptions {
   String toString() {
     return jsonEncode(toJson());
   }
-
 }
