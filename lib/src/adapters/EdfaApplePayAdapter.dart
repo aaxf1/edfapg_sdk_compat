@@ -5,7 +5,6 @@ import 'package:edfapg_sdk/src/adapters/BaseAdapter.dart';
 import 'package:edfapg_sdk/src/applepay/EdfaApplePayResult.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgPayer.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgSaleOrder.dart';
-import 'package:edfapg_sdk/src/request/EdfaPgConfig.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgRecurringOptions.dart';
 import 'callbacks/ApplePayResponseCallback.dart';
 
