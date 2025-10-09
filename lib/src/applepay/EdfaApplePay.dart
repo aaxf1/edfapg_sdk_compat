@@ -7,6 +7,8 @@ import 'package:edfapg_sdk/src/request/EdfaPgPayer.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgSaleOrder.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgRecurringOptions.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgConfig.dart';
+import 'package:edfapg_sdk/edfapg_sdk.dart';
+
 
 class EdfaApplePay {
   Function(Map response)? _onTransactionFailure;
