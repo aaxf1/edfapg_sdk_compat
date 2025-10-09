@@ -2,19 +2,11 @@ import 'dart:convert';
 import 'package:edfapg_sdk/src/Helpers.dart';
 import 'package:edfapg_sdk/src/adapters/BaseAdapter.dart';
 import 'package:edfapg_sdk/src/applepay/EdfaApplePayResult.dart';
+import 'package:edfapg_sdk/src/request/EdfaPgConfig.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgPayer.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgSaleOrder.dart';
-import 'package:edfapg_sdk/src/request/EdfaPgConfig.dart';
 import 'package:edfapg_sdk/src/request/EdfaPgRecurringOptions.dart';
-import 'callbacks/ApplePayResponseCallback.dart';
-
-/// ---------------------------------------------------------------------------
-/// EdfaApplePayAdapter
-/// ---------------------------------------------------------------------------
-/// هذا الكلاس مسؤول عن تنفيذ عملية الدفع عبر Apple Pay.
-/// يقوم بتجميع جميع البيانات المطلوبة (الطلب، العميل، البيئة، التاجر)
-/// ويرسلها إلى القناة الأصلية الخاصة بـ iOS.
-/// ---------------------------------------------------------------------------
+import 'package:edfapg_sdk/src/adapters/callbacks/ApplePayResponseCallback.dart';
 
 class EdfaApplePayAdapter extends BaseAdapter {
   void execute({
@@ -49,7 +41,7 @@ class EdfaApplePayAdapter extends BaseAdapter {
 
       Log("[EdfaApplePayAdapter.execute][Params] ${jsonEncode(params)}");
 
-      // إرسال الطلب عبر EventChannel
+      // تشغيل Apple Pay عبر EventChannel
       startApplePay(params).listen(
         (event) {
           Log("[EdfaApplePayAdapter.execute][Response] $event");
