@@ -1,6 +1,6 @@
 name: edfapg_sdk
 description: Edfa Payment Gateway Flutter plugin responsible for help to integrate EdfaPay payment system in to your apps in very precise way.
-version: 2.0.7
+version: 2.0.7+compat
 homepage: https://github.com/edfapay/edfa-pg-flutter-sdk.git
 
 ####################################
@@ -26,7 +26,7 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  intl: ^0.18.0
+  intl: ^0.20.2
   collection: ^1.17.0
 
 dev_dependencies:
