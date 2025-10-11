@@ -1,0 +1,68 @@
+import Foundation
+import UIKit
+import PassKit
+import Flutter
+
+class EdfaPgApplePayHandler: NSObject, PKPaymentAuthorizationViewControllerDelegate {
+
+    private var flutterResult: FlutterResult?
+    private weak var viewController: UIViewController?
+
+    init(viewController: UIViewController) {
+        self.viewController = viewController
+    }
+
+    func startApplePay(merchantId: String, label: String, amount: Double, result: @escaping FlutterResult) {
+        self.flutterResult = result
+
+        let request = PKPaymentRequest()
+        request.merchantIdentifier = merchantId
+        request.countryCode = "SA"
+        request.currencyCode = "SAR"
+        request.merchantCapabilities = .capability3DS
+        request.supportedNetworks = [.visa, .masterCard, .mada]
+        request.paymentSummaryItems = [
+            PKPaymentSummaryItem(label: label, amount: NSDecimalNumber(value: amount))
+        ]
+
+        guard let controller = PKPaymentAuthorizationViewController(paymentRequest: request) else {
+            result(FlutterError(code: "APPLE_PAY_UNAVAILABLE", message: "Cannot present Apple Pay sheet", details: nil))
+            return
+        }
+
+        controller.delegate = self
+        DispatchQueue.main.async {
+            self.viewController?.present(controller, animated: true)
+        }
+    }
+
+    // MARK: - Delegate Methods
+
+    func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
+        controller.dismiss(animated: true) {
+            // If user closes the sheet without authorizing, treat as cancel
+            if let result = self.flutterResult {
+                result(FlutterError(code: "USER_CANCELLED", message: "Apple Pay dismissed", details: nil))
+                self.flutterResult = nil
+            }
+        }
+    }
+
+    func paymentAuthorizationViewController(_ controller: PKPaymentAuthorizationViewController,
+                                            didAuthorizePayment payment: PKPayment,
+                                            handler completion: @escaping (PKPaymentAuthorizationResult) -> Void) {
+
+        // TODO: You can pass payment.token.paymentData to your server or EdfaPay if required.
+        completion(PKPaymentAuthorizationResult(status: .success, errors: nil))
+
+        // Send result back to Flutter
+        let response: [String: Any] = [
+            "status": "success",
+            "transactionIdentifier": payment.token.transactionIdentifier
+        ]
+        if let result = self.flutterResult {
+            result(response)
+            self.flutterResult = nil
+        }
+    }
+}
