@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
 import PassKit
-import Foundation
+import EdfaPgSdk
 
 fileprivate let events: EdfaPaySdkEventChannels = EdfaPaySdkEventChannels()
 fileprivate let methods: EdfapaySdkMethodChannels = EdfapaySdkMethodChannels()
