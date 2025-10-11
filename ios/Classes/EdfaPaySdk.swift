@@ -8,75 +8,54 @@ fileprivate let methods: EdfapaySdkMethodChannels = EdfapaySdkMethodChannels()
 
 fileprivate let PAYMENT_URL = "https://api.edfapay.com/payment/post"
 
-public class EdfaPgSdkPlugin: NSObject, FlutterPlugin, PKPaymentAuthorizationViewControllerDelegate {
+public class EdfaPgSdkPlugin: NSObject, FlutterPlugin {
 
-    // MARK: - Apple Pay Authorization Delegate
-    public func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
-        controller.dismiss(animated: true)
-        print("💳 ApplePay finished or cancelled.")
-    }
-
-    // MARK: - Flutter Plugin Registration
     public static func register(with registrar: FlutterPluginRegistrar) {
         if let flutterViewController = UIApplication.shared.delegate?.window??.rootViewController as? FlutterViewController {
             events.initiate(with: flutterViewController)
             methods.initiate(with: flutterViewController)
         }
-        registrar.addMethodCallDelegate(EdfaPgSdkPlugin(), channel: methods.edfaPaySdk!)
-    }
-
-    // MARK: - Flutter Method Handler
-    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if call.method == methods.methodGetPlatformVersion {
-            getPlatformVersion(call, result: result)
-        } else if call.method == methods.methodConfig {
-            config(call, result: result)
-        } else if call.method == "applePay" {
-            if let vc = UIApplication.shared.delegate?.window??.rootViewController as? UIViewController {
-                print("🚀 ApplePay triggered from Flutter")
-
-                // القيم الافتراضية للاختبار — عدّلها لاحقاً من Dart
-                apple(
-                    viewController: vc,
-                    merchantId: "merchant.com.fared",
-                    label: "EdfaPay Checkout",
-                    amount: 1.00
-                )
-                result("ApplePay started")
-            } else {
-                result(FlutterError(code: "NO_VC", message: "No root view controller found", details: nil))
-            }
+        if let channel = methods.edfaPaySdk {
+            registrar.addMethodCallDelegate(EdfaPgSdkPlugin(), channel: channel)
         } else {
-            result(FlutterMethodNotImplemented)
+            // Fallback channel creation if initiate didn't run with a FlutterViewController
+            let channel = FlutterMethodChannel(name: "edfapg_sdk", binaryMessenger: registrar.messenger())
+            registrar.addMethodCallDelegate(EdfaPgSdkPlugin(), channel: channel)
         }
     }
 
-    // MARK: - Apple Pay Core Logic
-    func apple(viewController: UIViewController, merchantId: String, label: String, amount: Double) {
-        let request = PKPaymentRequest()
-        request.countryCode = "SA"
-        request.currencyCode = "SAR"
-        request.merchantIdentifier = merchantId
-        request.merchantCapabilities = .capability3DS
-        request.supportedNetworks = [.visa, .masterCard, .mada]
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch call.method {
+        case methods.methodGetPlatformVersion:
+            getPlatformVersion(call, result: result)
 
-        request.paymentSummaryItems = [
-            PKPaymentSummaryItem(label: label, amount: NSDecimalNumber(value: amount))
-        ]
+        case methods.methodConfig:
+            config(call, result: result)
 
-        if let payvc = PKPaymentAuthorizationViewController(paymentRequest: request) {
-            payvc.delegate = self
-            DispatchQueue.main.async {
-                print("✅ Presenting Apple Pay sheet...")
-                viewController.present(payvc, animated: true)
+        case methods.methodApplePay:
+            // Expecting arguments from Flutter
+            guard let args = call.arguments as? [String: Any] else {
+                result(FlutterError(code: "BAD_ARGS", message: "Missing arguments for applePay", details: nil))
+                return
             }
-        } else {
-            print("❌ ApplePay view controller creation failed")
+            let merchantId = (args["merchantId"] as? String) ?? "merchant.com.fared"
+            let label = (args["label"] as? String) ?? "EdfaPay Checkout"
+            let amount = (args["amount"] as? Double) ?? 1.0
+
+            if let vc = UIApplication.shared.delegate?.window??.rootViewController {
+                let handler = EdfaPgApplePayHandler(viewController: vc)
+                handler.startApplePay(merchantId: merchantId, label: label, amount: amount, result: result)
+            } else {
+                result(FlutterError(code: "NO_VC", message: "No root view controller found", details: nil))
+            }
+
+        default:
+            result(FlutterMethodNotImplemented)
         }
     }
 }
 
-// MARK: - Extensions
+// MARK: - Private helpers
 extension EdfaPgSdkPlugin {
     private func getPlatformVersion(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         result("iOS " + UIDevice.current.systemVersion)
