@@ -1,28 +1,17 @@
-//
-//  EdfaPaySdkEventChannels.swift
-//  EdfaPaySdk
-//
-//  Created by Zohaib Kambrani on 02/03/2023.
-//
-
 import Foundation
 import Flutter
-import UIKit
-import EdfaPgSdk
 
+class EdfapaySdkMethodChannels {
 
-public class EdfapaySdkMethodChannels: NSObject{
-    var edfaPaySdk:FlutterMethodChannel? = nil;
+    var edfaPaySdk: FlutterMethodChannel? = nil
 
-    final let methodGetPlatformVersion = "getPlatformVersion";
-    final let methodConfig = "config";
+    // Method names used from Flutter
+    let methodGetPlatformVersion = "getPlatformVersion"
+    let methodConfig = "config"
+    let methodApplePay = "applePay"
 
-    public func initiate(with flutterViewController: FlutterViewController){
-        
-        let messenger = flutterViewController.binaryMessenger
-        
-        edfaPaySdk = FlutterMethodChannel(name: "com.edfapg.flutter.sdk", binaryMessenger: messenger)
+    func initiate(with controller: FlutterViewController) {
+        // IMPORTANT: Channel name must match the one used in Dart side
+        edfaPaySdk = FlutterMethodChannel(name: "edfapg_sdk", binaryMessenger: controller.binaryMessenger)
     }
-    
 }
-
