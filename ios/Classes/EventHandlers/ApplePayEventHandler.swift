@@ -12,134 +12,133 @@ import EdfaPgSdk
 import PassKit
 
 
-class ApplePayEventHandler : NSObject, FlutterStreamHandler{
+class ApplePayEventHandler: NSObject, FlutterStreamHandler {
+
+    var eventSink: FlutterEventSink? = nil
+    // ✅ يمكنك التحكم في إظهار سجلات الـ debug من هنا
+    private let ENABLE_DEBUG = true
     
-    var eventSink:FlutterEventSink? = nil
-    
-    // (SaleAdapter code remains the same, assuming it's correctly linked)
     private lazy var saleAdapter: EdfaPgSaleAdapter = {
         let adapter = EdfaPgAdapterFactory().createSale()
         adapter.delegate = self
         return adapter
     }()
     
-    
+    // MARK: - Flutter Stream Setup
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         eventSink = events
         
-        if let params = arguments as? [String:Any],
-           let order = params["EdfaPgSaleOrder"] as? [String : Any?],
-           let payer =  params["EdfaPgPayer"] as? [String : Any?],
-           let applePayMerchantId = params["applePayMerchantId"] as? String{
-             
-            let order = EdfaPgSaleOrder.from(dictionary: order)
-            let payer = EdfaPgPayer.from(dictionary: payer)
+        if let params = arguments as? [String: Any],
+           let orderDict = params["EdfaPgSaleOrder"] as? [String: Any?],
+           let payerDict = params["EdfaPgPayer"] as? [String: Any?],
+           let applePayMerchantId = params["applePayMerchantId"] as? String {
             
-            // ⚠️ التعديل الأول: استخدام rootViewController لزيادة الموثوقية وتجنب nil
-            guard let targetVC = UIApplication.shared.keyWindow?.rootViewController else {
-                self.handleFailure(error: "Cannot find root view controller to present Apple Pay sheet.")
-                return FlutterError(code: "VIEW_ERROR", message: "Root VC not found.", details: nil)
-            }
+            let order = EdfaPgSaleOrder.from(dictionary: orderDict)
+            let payer = EdfaPgPayer.from(dictionary: payerDict)
             
-            // The precise way to present by sdk it self
             EdfaApplePay()
                 .set(order: order)
                 .set(payer: payer)
                 .set(applePayMerchantID: applePayMerchantId)
                 .enable(logs: ENABLE_DEBUG)
                 .on(authentication: { pk in
-                    debugPrint(pk)
-                    self.handleAuth(paymentToken: pk.token)
-                    
-                }).on(transactionFailure: { [weak self] response in
-                    guard let self = self else { return }
-                    debugPrint(response)
-                    self.handleFailure(error: response) // يرسل تحت مفتاح "failure"
-                    
-                }).on(transactionSuccess: { [weak self] response in
-                    guard let self = self else { return }
-                    debugPrint(response ?? "")
-                    // ضمان تحويل كائن النجاح إلى JSON تحت مفتاح "success"
-                    if let encodableResponse = response as? Encodable {
-                        self.eventSink?(encodableResponse.toJSON(root: "success"))
-                    } else {
-                        // Fallback
-                        let defaultSuccess = [
-                            "result" : "SUCCESS",
-                            "error_code" : 0,
-                            "error_message" : "Transaction successful, but response object was unencodable."
-                        ] as [String : Any]
-                        self.eventSink?(["success": defaultSuccess])
-                    }
-                    
-                }).initialize(
-                    target: targetVC, // تم استخدام targetVC المعدل
-                    onError: { [weak self] error in
-                        guard let self = self else { return }
-                        // ⚠️ التعديل الثاني: توجيه كل الأخطاء لـ handleFailure لتوحيد المفتاح إلى "failure"
-                        self.handleFailure(error: error) 
-                    },
-                    onPresent: onPresent
-                )
-            
+                    debugPrint("🔐 ApplePay Auth...")
+                    self.handleAuth(paymentToken: pk)
+                })
+                .on(error: { error in
+                    debugPrint("❌ ApplePay Error...")
+                    self.handleFailure(error: error)
+                })
+                .on(success: { response in
+                    debugPrint("✅ ApplePay Success...")
+                    self.handleSuccess(response: response)
+                })
+                .set(viewController: UIApplication.shared.keyWindow?.rootViewController)
+                .execute(adapter: self.saleAdapter)
         }
         return nil
     }
     
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        eventSink = nil
         return nil
     }
+
+    // MARK: - Internal Handlers
     
-    private func onPresent(){
-        debugPrint("onPresent :)")
-        eventSink?(["onPresent" : ":)"])
-    }
-    
-    private func handleAuth(paymentToken:PKPaymentToken){
-        let data = [
-            "authentication":[
-                "transactionIdentifier":paymentToken.transactionIdentifier,
-                "paymentData":paymentToken.paymentData,
-                "paymentMethod":[
-                    "displayName" : paymentToken.paymentMethod.displayName,
-                    "network" : paymentToken.paymentMethod.network?.rawValue ?? "",
+    private func handleAuth(paymentToken: PKPaymentToken) {
+        let data: [String: Any] = [
+            "authentication": [
+                "transactionIdentifier": paymentToken.transactionIdentifier,
+                "paymentData": paymentToken.paymentData,
+                "paymentMethod": [
+                    "displayName": paymentToken.paymentMethod.displayName,
+                    "network": paymentToken.paymentMethod.network?.rawValue ?? ""
                 ]
             ]
         ]
-        self.eventSink?(data)
+        eventSink?(data)
     }
     
-    // تم إزالة handleSuccess القديمة غير المستخدمة لـ GetTransactionDetailsSuccess
+    // MARK: - Unified Success / Failure Handling
     
-    private func handleFailure(error:Any){
-        if let e = error as? EdfaPgError{
-            // ⚠️ التعديل: إرسال الـ EdfaPgError تحت مفتاح "failure"
-            eventSink?(e.toJSON(root: "failure")) 
-        }else if let e = error as? Encodable{
-            // ⚠️ التعديل: إرسال الردود المرفوضة (failure response) تحت مفتاح "failure"
-            eventSink?(e.toJSON(root: "failure"))
-        }else{
-            // ⚠️ التعديل: معالجة الأخطاء غير القابلة للترميز تحت مفتاح "failure"
-            let errorMap = [
-                "result" : "ERROR",
-                "error_code" : 100000,
-                "error_message" : "\(error)",
-                "errors" : [],
-            ] as [String : Any]
-            eventSink?(["failure":errorMap]) 
+    private func handleSuccess(response: EdfaPgGetTransactionDetailsSuccess) {
+        let json = response.toJSON(root: "success")
+        debugPrint("✅ native.transactionSuccess.data => \(json ?? [:])")
+        eventSink?(json)
+    }
+    
+    // 🛑 الدالة المعدَّلة لـ handleFailure 🛑
+    private func handleFailure(error: Any) {
+        if let e = error as? EdfaPgError {
+            // حالة خطأ SDK قياسي
+            eventSink?([ "failure": e.json() ])
+        } else {
+            // حالة خطأ فك الترميز (Decoding Error) أو أي خطأ غير متوقع (Type: Encodable, String, etc.)
+            let errorMessage: String
+            
+            if let encodableError = error as? Encodable {
+                // حاول تحويل الخطأ إلى JSON قياسي أولاً (إذا أمكن)
+                if let jsonError = encodableError.toJSON(root: "error") {
+                    eventSink?(jsonError)
+                    return
+                }
+                // إذا فشل التحويل عبر toJSON، أرسل رسالة توضيحية لـ Flutter
+                // (هذه الكتلة تحل مشكلة الـ Type Cast)
+                errorMessage = "Decoding Failed (check EdfaPgStatus enum). Raw error: \(error)"
+            } else {
+                // خطأ غير مصنف (مثل String أو Error)
+                errorMessage = "Native SDK Error: \(error)"
+            }
+            
+            // بناء خريطة خطأ قياسية ومضمونة لـ Flutter
+            let errorMap: [String: Any] = [
+                "result": "ERROR",
+                "error_code": 100000,
+                "error_message": errorMessage,
+                "errors": []
+            ]
+            
+            // نستخدم قناة "failure" هنا حيث أن الخطأ نتج عن عملية فاشلة
+            eventSink?([ "failure": errorMap ])
+            debugPrint("❌ NATIVE ERROR HANDLED (FAILURE) => \(errorMap)")
+        }
+    }
+}
+
+// MARK: - EdfaPgAdapterDelegate
+extension ApplePayEventHandler: EdfaPgAdapterDelegate {
+    
+    func willSendRequest(_ request: EdfaPgDataRequest) {
+        if ENABLE_DEBUG {
+            debugPrint("📤 EdfaPgAdapter will send request: \(request)")
         }
     }
     
-}
-
-extension ApplePayEventHandler : EdfaPgAdapterDelegate{
-    
-    func willSendRequest(_ request: EdfaPgDataRequest) {
-        
-    }
-    
     func didReceiveResponse(_ reponse: EdfaPgDataResponse?) {
-        
+        if let data = reponse?.data,
+           let dict = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+            debugPrint("📢 SDK Response Raw => \(dict)")
+        }
     }
-    
 }
