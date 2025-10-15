@@ -1,7 +1,6 @@
 import 'package:edfapg_sdk/src/adapters/callbacks/ApplePayResponseCallback.dart';
 
 class EdfaApplePayResult{
-  // تم ترك الأنواع العامة Map? كما هي لتجنب تغيير الملفات الأخرى
   Map? authentication; 
   Map? success;
   Map? failure;
