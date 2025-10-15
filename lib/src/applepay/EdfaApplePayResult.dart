@@ -1,50 +1,52 @@
-
 import 'package:edfapg_sdk/src/adapters/callbacks/ApplePayResponseCallback.dart';
 
 class EdfaApplePayResult{
+  // تم ترك الأنواع العامة Map? لتجنب تغيير الملفات الأخرى
   Map? authentication;
   Map? success;
   Map? failure;
-  Map? error; // سيظل موجودًا لدعم مفتاح الخطأ الصريح
+  Map? error;
 
   EdfaApplePayResult(Map result){
     if(result.containsKey("authentication")) {
-      authentication = result["authentication"];
+      // ✅ التعديل الرئيسي: تحويل النوع بشكل آمن
+      authentication = Map<String, dynamic>.from(result["authentication"]);
     }
 
     if(result.containsKey("success")) {
-      success = result["success"];
+      // ✅ التعديل الرئيسي: تحويل النوع بشكل آمن
+      success = Map<String, dynamic>.from(result["success"]);
     }
     if(result.containsKey("failure")) {
-      failure = result["failure"];
+      // ✅ التعديل الرئيسي: تحويل النوع بشكل آمن
+      failure = Map<String, dynamic>.from(result["failure"]);
     }
 
-    // 💡 التعديل: إعطاء الأولوية لمفتاح "failure" لتوحيد منطق الأخطاء
     if(result.containsKey("error")) {
-      error = result["error"];
-    } else if (result.containsKey("failure")) { // في حالة وجود فشل ولم يتم تعريف الخطأ صراحة
-      failure = result["failure"];
+      // ✅ التعديل الرئيسي: تحويل النوع بشكل آمن
+      error = Map<String, dynamic>.from(result["error"]);
     }
-    
-    // ملاحظة: بما أننا وحدنا كل الأخطاء في Swift إلى "failure"، فإن الـ 'error' قد لا يكون مطلوبًا
-    // ولكن نتركه لدعم الـ SDK الحالي. 
   }
 
   triggerCallbacks(ApplePayResponseCallback? callback, {Function(dynamic)? onFailure}){
     if(authentication != null) {
-      callback?.authentication(authentication! as Map<String, dynamic>); // تم إضافة Cast هنا لزيادة السلامة
+      // تم التأكد من أن authentication! هو Map<String, dynamic> الآن
+      callback?.authentication(authentication!);
     }
 
     if(success != null) {
-      callback?.success(success! as Map<String, dynamic>); // تم إضافة Cast هنا
+      // تم التأكد من أن success! هو Map<String, dynamic> الآن
+      callback?.success(success!);
     }
 
     if(failure != null) {
-      callback?.failure(failure! as Map<String, dynamic>); // تم إضافة Cast هنا
+      // تم التأكد من أن failure! هو Map<String, dynamic> الآن
+      callback?.failure(failure!);
     }
 
     if(error != null) {
-      callback?.error(error! as Map<String, dynamic>); // تم إضافة Cast هنا
+      // تم التأكد من أن error! هو Map<String, dynamic> الآن
+      callback?.error(error!);
     }
   }
 }
