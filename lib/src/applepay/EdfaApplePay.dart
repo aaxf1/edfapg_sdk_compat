@@ -56,6 +56,7 @@ class EdfaApplePay{
     return this;
   }
 
+
   initialize(BuildContext context){
 
     EdfaPgSdk.instance.ADAPTER.APPLE_PAY.execute(
