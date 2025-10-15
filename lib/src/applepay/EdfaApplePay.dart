@@ -56,7 +56,6 @@ class EdfaApplePay{
     return this;
   }
 
-
   initialize(BuildContext context){
 
     EdfaPgSdk.instance.ADAPTER.APPLE_PAY.execute(
@@ -74,7 +73,13 @@ class EdfaApplePay{
             },
             failure: (Map response){
               Log(response.toString());
-              _onTransactionFailure!(response);
+              
+              // 🔴 التعديل المطلوب: فحص إذا كان الرد خطأ نيتف (Native Error)
+              if (response.containsKey('result') && response['result'] == 'ERROR') {
+                 _onError!(response); // إعادة التوجيه إلى دالة الخطأ
+              } else {
+                 _onTransactionFailure!(response); // الرفض المنظم (DECLINED)
+              }
             },
             error: (Map error){
               _onError!(error);
@@ -82,6 +87,7 @@ class EdfaApplePay{
         )
     );
 
+     
     Future.delayed(const Duration(milliseconds: 200)).then((value) {
       if(_onPresent != null) {
         _onPresent!(context);
