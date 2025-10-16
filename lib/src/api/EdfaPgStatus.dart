@@ -30,6 +30,8 @@ enum EdfaPgStatus{
     /// Transaction for which chargeback was made.
     CHARGEBACK("CHARGEBACK"),
 
+    ERROR("ERROR"),
+
     /// Not successful transaction.
     DECLINED("DECLINED"),
 
