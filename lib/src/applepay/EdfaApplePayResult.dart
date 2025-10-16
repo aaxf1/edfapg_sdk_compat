@@ -1,26 +1,26 @@
+
 import 'package:edfapg_sdk/src/adapters/callbacks/ApplePayResponseCallback.dart';
 
 class EdfaApplePayResult{
-  Map? authentication; 
+  Map? authentication;
   Map? success;
   Map? failure;
   Map? error;
 
   EdfaApplePayResult(Map result){
-    // ✅ التعديل الرئيسي: استخدام Map<String, dynamic>.from() لتحويل النوع بشكل آمن
     if(result.containsKey("authentication")) {
-      authentication = Map<String, dynamic>.from(result["authentication"]); 
+      authentication = result["authentication"];
     }
 
     if(result.containsKey("success")) {
-      success = Map<String, dynamic>.from(result["success"]);
+      success = result["success"];
     }
     if(result.containsKey("failure")) {
-      failure = Map<String, dynamic>.from(result["failure"]);
+      failure = result["failure"];
     }
 
     if(result.containsKey("error")) {
-      error = Map<String, dynamic>.from(result["error"]);
+      error = result["error"];
     }
   }
 
