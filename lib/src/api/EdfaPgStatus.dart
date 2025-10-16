@@ -32,9 +32,6 @@ enum EdfaPgStatus{
 
     /// Not successful transaction.
     DECLINED("DECLINED"),
-    
-    // ⬅️ الإضافة المطلوبة: إضافة حالة ERROR
-    ERROR("ERROR"), 
 
     NONE("NONE");
 
