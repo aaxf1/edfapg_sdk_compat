@@ -142,3 +142,5 @@ extension CardDetailPayEventHandler : EdfaPgAdapterDelegate{
     }
     
 }
+
+
