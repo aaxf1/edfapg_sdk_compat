@@ -32,9 +32,8 @@ android {
     namespace 'com.edfapg.flutter.sdk'
 
     defaultConfig {
-//        applicationId "com.edfapg.flutter.sdk"
-        minSdk 21
-        targetSdk 34
+        minSdkVersion 21
+        targetSdkVersion 34
 
         aarMetadata {
             minCompileSdk = 21
@@ -59,15 +58,10 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+}
 
-    defaultConfig {
-        minSdkVersion 21
-    }
 
-    dependencies {
-        implementation 'com.github.edfapay:edfa-pg-android-sdk:2.1.0' // Latest Snapshot from JitPack
-//        implementation 'com.edfapg:sdk:1.0.5' // Local Repository
-//        implementation project(path: ':edfa-pg-sdk') // Local Module
-        implementation 'com.google.code.gson:gson:2.9.0'
-    }
+dependencies {
+    implementation 'com.github.edfapay:edfa-pg-android-sdk:2.1.0' // from JitPack
+    implementation 'com.google.code.gson:gson:2.9.0'
 }
