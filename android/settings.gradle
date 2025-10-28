@@ -2,6 +2,7 @@
 //project(':edfa-pg-sdk').projectDir = new File(settingsDir,"../../edfa-pg-android-sdk/edfa-pg-sdk")
 //print(new File(settingsDir,"../../edfa-pg-android-sdk/edfa-pg-sdk"))
 
+<<<<<<< HEAD
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
@@ -11,3 +12,25 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'edfapg_sdk'
+=======
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url 'https://jitpack.io' }   
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }   
+    }
+}
+
+rootProject.name = "com.flutterflow.fa1red"
+include ':app'
+>>>>>>> 7df03ea089f29e92ce6f98c11a9ee23b9e931344
