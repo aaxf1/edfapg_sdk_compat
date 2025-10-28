@@ -62,6 +62,6 @@ android {
 
 
 dependencies {
-    implementation 'com.github.edfapay:edfa-pg-android-sdk:2.1.0' // from JitPack
+    implementation 'com.github.edfapay:edfa-pg-android-sdk:2.1.1'
     implementation 'com.google.code.gson:gson:2.9.0'
 }
